@@ -29,6 +29,7 @@ Please **read the warnings** at the top. Thank you!
 
 - [ ] Add indicator for where array accesses are, with different colors for reads, writes, and both
 - [ ] Add sounds
+- [ ] Add a HUD using a non-obtrusive color
 - [ ] Add more algorithms
 
 ## What do I think of this?
