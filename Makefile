@@ -10,7 +10,6 @@ else
 	/ = /
 	RM = rm
 endif
-/ = \\#
 SOURCE = src$/main.c
 OUTPUT = bin$/RaylibSortingVisualizer.exe
 GENERIC_COMMAND = ${CC} ${SOURCE} -o ${OUTPUT} -Iinclude -Llib -lraylib -lopengl32 -lgdi32 -lwinmm -pthread
