@@ -11,11 +11,9 @@ A sorting algorithm visualizer created with [Raylib](https://github.com/raysan5/
 
 I used Windows to create this but I'm sure it can be compiled on other platforms.
 
-Before compiling, make sure you have a "bin" folder in the project directory.
-
 For Windows, run this command:
 ```
-gcc src\main.c -o bin\RaylibSortingVisualizer.exe -Iinclude -Llib -lraylib -lopengl32 -lgdi32 -lwinmm -pthread -O2
+gcc src\main.c -o RaylibSortingVisualizer.exe -Iinclude -Llib -lraylib -lopengl32 -lgdi32 -lwinmm -pthread -O2
 ```
 To compile in debug mode, replace `-O2` with `-g`.
 
@@ -29,7 +27,7 @@ Please **read the warnings** at the top. Thank you!
 
 - [X] Add indicator for where array accesses are, with different colors for reads, writes, and both (bc540cc1ceae5de769dd40eda9566bbea58ca124)
   - [ ] Make the indicator more visible
-- [X] Add sounds
+- [X] Add sounds (ad13cd830af638f578367f0773e4142bc5ea66d0)
 - [ ] Add a HUD using a non-obtrusive color
 - [ ] Add more algorithms
 

@@ -9,7 +9,7 @@
             "preLaunchTask": "Run make debug",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}\\bin\\RaylibSortingVisualizer.exe",
+            "program": "${workspaceFolder}\\RaylibSortingVisualizer.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
