@@ -85,7 +85,7 @@ void Array_set_at_callback(Array_CallbackType callback)
  */
 void Array_set_set_callback(Array_CallbackType callback)
 {
-    _Array_at_callback = callback;
+    _Array_set_callback = callback;
 }
 
 /**
