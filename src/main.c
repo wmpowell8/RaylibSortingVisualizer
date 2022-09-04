@@ -29,6 +29,9 @@ pthread_t sort_array_write_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER;
 size_t sort_array_write_len = 0;
 size_t *sort_array_write_indices;
 
+Sound array_read_sound;
+Sound array_write_sound;
+
 #define push_array_access(mutex, index_stack, index_len)               \
     pthread_mutex_lock(mutex);                                         \
     size_t old_len = index_len;                                        \
@@ -68,13 +71,17 @@ void draw_array(Array array, int width, int height, int x, int y)
 
     const Color RECTANGLE_COLORS[4] = {WHITE, BLUE, RED, MAGENTA};
 
-#define compile_array_accesses(mutex, index_stack, index_len, bit)             \
+#define compile_array_accesses(mutex, index_stack, index_len, bit, sound)      \
     pthread_mutex_lock(mutex);                                                 \
     for (size_t i = 0; i < index_len; i++)                                     \
     {                                                                          \
         size_t index = index_stack[i];                                         \
         if (index < array->len)                                                \
+        {                                                                      \
             sort_array_modifications[index >> 2] |= bit << ((index & 3) << 1); \
+            SetSoundPitch(sound, (float)array->_arr[index] / array->len);      \
+            PlaySound(sound);                                                  \
+        }                                                                      \
     }                                                                          \
     index_len = 0;                                                             \
     index_stack = MemRealloc(index_stack, 0);                                  \
@@ -85,8 +92,8 @@ void draw_array(Array array, int width, int height, int x, int y)
     {
         sort_array_modifications = MemAlloc((array->len + 3 >> 2) * sizeof(unsigned char));
 
-        compile_array_accesses(&sort_array_read_lock, sort_array_read_indices, sort_array_read_len, 1);
-        compile_array_accesses(&sort_array_write_lock, sort_array_write_indices, sort_array_write_len, 2);
+        compile_array_accesses(&sort_array_read_lock, sort_array_read_indices, sort_array_read_len, 1, array_read_sound);
+        compile_array_accesses(&sort_array_write_lock, sort_array_write_indices, sort_array_write_len, 2, array_write_sound);
     }
 
     for (size_t i = 0; i < array->len; i++)
@@ -165,6 +172,10 @@ int main()
     Array_set_at_callback(my_array_read_callback);
     Array_set_set_callback(my_array_write_callback);
     sort_array = Array_new_init(256);
+
+    InitAudioDevice();
+    array_read_sound = LoadSound("assets/array_read.wav");
+    array_write_sound = LoadSound("assets/array_write.wav");
 
     InitWindow(640, 480, "Sorting Visualizer");
     SetWindowState(FLAG_WINDOW_RESIZABLE);

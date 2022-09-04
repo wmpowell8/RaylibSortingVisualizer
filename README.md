@@ -27,9 +27,9 @@ Please **read the warnings** at the top. Thank you!
 
 ## To-do
 
-- [X] Add indicator for where array accesses are, with different colors for reads, writes, and both
+- [X] Add indicator for where array accesses are, with different colors for reads, writes, and both (bc540cc1ceae5de769dd40eda9566bbea58ca124)
   - [ ] Make the indicator more visible
-- [ ] Add sounds
+- [X] Add sounds
 - [ ] Add a HUD using a non-obtrusive color
 - [ ] Add more algorithms
 
