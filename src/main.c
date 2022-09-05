@@ -10,6 +10,7 @@
 #include "algorithms/sort/ICantBelieveItCanSort.c"
 #include "algorithms/sort/QuickSort.c"
 #include "algorithms/sort/MergeSort.c"
+#include "algorithms/sort/HeapSort.c"
 #include "algorithms/sort/BogoSort.c"
 
 /**
@@ -171,6 +172,7 @@ void *sort_proc(void *args)
         !show_sort(OddEvenSort, 64, StandardShuffle) ||
         !show_sort(MergeSort, 256, StandardShuffle) ||
         !show_sort(QuickSort, 128, StandardShuffle) ||
+        !show_sort(HeapSort, 128, StandardShuffle) ||
         !show_sort(BogoSort, 5, StandardShuffle))
     {
         TraceLog(LOG_ERROR, "Sorting Visualizer: algorithm returned false; stopped prematurely");
