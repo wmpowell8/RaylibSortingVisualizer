@@ -28,7 +28,7 @@ Please **read the warnings** at the top. Thank you!
 - [X] Add indicator for where array accesses are, with different colors for reads, writes, and both ([commit bc540cc](https://github.com/wmpowell8/RaylibSortingVisualizer/commit/bc540cc1ceae5de769dd40eda9566bbea58ca124))
   - [ ] Make the indicator more visible
 - [X] Add sounds ([commit ad13cd8](https://github.com/wmpowell8/RaylibSortingVisualizer/commit/ad13cd830af638f578367f0773e4142bc5ea66d0))
-- [ ] Add a HUD using a non-obtrusive color
+- [X] Add a HUD using a non-obtrusive color
 - [ ] Add more algorithms
 
 ## What do I think of this?

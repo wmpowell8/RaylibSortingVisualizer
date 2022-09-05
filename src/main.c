@@ -32,6 +32,11 @@ size_t *sort_array_write_indices;
 Sound array_read_sound;
 Sound array_write_sound;
 
+char status_text[256] = "";
+
+size_t array_read_count = 0;
+size_t array_write_count = 0;
+
 #define push_array_access(mutex, index_stack, index_len)               \
     pthread_mutex_lock(mutex);                                         \
     size_t old_len = index_len;                                        \
@@ -47,6 +52,7 @@ void my_array_read_callback(Array array, size_t index)
     if (array == sort_array)
     {
         push_array_access(&sort_array_read_lock, sort_array_read_indices, sort_array_read_len);
+        array_read_count++;
         WaitTime(array_access_delay);
     }
 }
@@ -58,6 +64,7 @@ void my_array_write_callback(Array array, size_t index)
     if (array == sort_array)
     {
         push_array_access(&sort_array_write_lock, sort_array_write_indices, sort_array_write_len);
+        array_write_count++;
         WaitTime(array_access_delay);
     }
 }
@@ -117,25 +124,33 @@ void draw_array(Array array, int width, int height, int x, int y)
  */
 bool show_sort(Algorithm sort, size_t array_size, Algorithm shuffle)
 {
+    status_text[255] = '\0';
+
     WaitTime(750.f);
-    SetWindowTitle("Sorting Visualizer - Initializing array");
+    array_read_count = 0;
+    array_write_count = 0;
+    strcpy_s(status_text, 255, "Initializing array");
     Array_free(sort_array);
     sort_array = Array_new_init(array_size);
-    SetWindowTitle("Sorting Visualizer");
+    strcpy_s(status_text, 255, "");
 
     WaitTime(750.f);
+    array_read_count = 0;
+    array_write_count = 0;
     SetRandomSeed(0);
-    SetWindowTitle(TextFormat("Sorting Visualizer - %s", shuffle.name));
+    strcpy_s(status_text, 255, TextFormat("Shuffling: %s", shuffle.name));
     if (!shuffle.fun(sort_array))
         return false;
-    SetWindowTitle("Sorting Visualizer");
+    strcpy_s(status_text, 255, "");
 
     WaitTime(750.f);
+    array_read_count = 0;
+    array_write_count = 0;
     SetRandomSeed(0);
-    SetWindowTitle(TextFormat("Sorting Visualizer - %s", sort.name));
+    strcpy_s(status_text, 255, TextFormat("Sorting: %s", sort.name));
     if (!sort.fun(sort_array))
         return false;
-    SetWindowTitle("Sorting Visualizer");
+    strcpy_s(status_text, 255, "");
 
     return true;
 }
@@ -150,9 +165,9 @@ void *sort_proc(void *args)
         !show_sort(InsertionSort, 64, StandardShuffle) ||
         !show_sort(BubbleSort, 64, StandardShuffle) ||
         !show_sort(CocktailShakerSort, 64, StandardShuffle) ||
-        !show_sort(SelectionSort, 64, StandardShuffle) ||
-        !show_sort(ICantBelieveItCanSort, 32, StandardShuffle) ||
-        !show_sort(MergeSort, 128, StandardShuffle) ||
+        !show_sort(SelectionSort, 96, StandardShuffle) ||
+        !show_sort(ICantBelieveItCanSort, 48, StandardShuffle) ||
+        !show_sort(MergeSort, 256, StandardShuffle) ||
         !show_sort(QuickSort, 128, StandardShuffle) ||
         !show_sort(BogoSort, 5, StandardShuffle))
     {
@@ -189,6 +204,7 @@ int main()
         BeginDrawing();
         ClearBackground(BLACK);
         draw_array(sort_array, GetScreenWidth() - 10, GetScreenHeight() - 10, 5, 5);
+        DrawText(TextFormat("%s\nArray Accesses: %llu\n\t(%llu reads, %llu writes)", status_text, array_read_count + array_write_count, array_read_count, array_write_count), 10, 10, 20, GREEN);
 
         EndDrawing();
     }
