@@ -6,6 +6,7 @@
 #include "algorithms/sort/CocktailShakerSort.c"
 #include "algorithms/sort/InsertionSort.c"
 #include "algorithms/sort/SelectionSort.c"
+#include "algorithms/sort/OddEvenSort.c"
 #include "algorithms/sort/ICantBelieveItCanSort.c"
 #include "algorithms/sort/QuickSort.c"
 #include "algorithms/sort/MergeSort.c"
@@ -167,6 +168,7 @@ void *sort_proc(void *args)
         !show_sort(CocktailShakerSort, 64, StandardShuffle) ||
         !show_sort(SelectionSort, 96, StandardShuffle) ||
         !show_sort(ICantBelieveItCanSort, 48, StandardShuffle) ||
+        !show_sort(OddEvenSort, 64, StandardShuffle) ||
         !show_sort(MergeSort, 256, StandardShuffle) ||
         !show_sort(QuickSort, 128, StandardShuffle) ||
         !show_sort(BogoSort, 5, StandardShuffle))
