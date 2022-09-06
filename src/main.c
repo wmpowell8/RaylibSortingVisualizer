@@ -203,6 +203,7 @@ int main()
     InitWindow(640, 480, "Sorting Visualizer");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(10, 10);
+    SetTargetFPS(60);
 
     pthread_t sort_thread;
     pthread_create(&sort_thread, NULL, sort_proc, NULL);
