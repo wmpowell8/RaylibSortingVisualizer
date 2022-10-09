@@ -16,9 +16,21 @@
 #include "algorithms/sort/BogoSort.c"
 
 /**
- * @brief The delay to wait every time the sorting algorithm makes an array access
+ * @brief The delay to wait every time the sorting algorithm makes an array access (in milliseconds)
  */
-float array_access_delay = 1.5f;
+float array_access_delay = 2.f;
+
+/**
+ * @brief Used in the pause_for macro, which waits until clock() exceeds this value
+ */
+float pause;
+/**
+ * @brief Intended to be used in a single thread and no other. Waits until `ms` milliseconds since the last pause_for call.
+ */
+#define pause_for(ms)                    \
+    pause += ms * CLOCKS_PER_SEC / 1000; \
+    while (clock() < pause)              \
+        sched_yield();
 
 /**
  * @brief The `Array` that the sorting algorithms act on
@@ -57,7 +69,7 @@ void my_array_read_callback(Array array, size_t index)
     {
         push_array_access(&sort_array_read_lock, sort_array_read_indices, sort_array_read_len);
         array_read_count++;
-        WaitTime(array_access_delay);
+        pause_for(array_access_delay);
     }
 }
 
@@ -69,7 +81,7 @@ void my_array_write_callback(Array array, size_t index)
     {
         push_array_access(&sort_array_write_lock, sort_array_write_indices, sort_array_write_len);
         array_write_count++;
-        WaitTime(array_access_delay);
+        pause_for(array_access_delay);
     }
 }
 
@@ -130,7 +142,7 @@ bool show_sort(Algorithm sort, size_t array_size, Algorithm shuffle)
 {
     status_text[255] = '\0';
 
-    WaitTime(750.f);
+    pause_for(750.f);
     array_read_count = 0;
     array_write_count = 0;
     strcpy_s(status_text, 255, "Initializing array");
@@ -138,7 +150,7 @@ bool show_sort(Algorithm sort, size_t array_size, Algorithm shuffle)
     sort_array = Array_new_init(array_size);
     strcpy_s(status_text, 255, "");
 
-    WaitTime(750.f);
+    pause_for(750.f);
     array_read_count = 0;
     array_write_count = 0;
     SetRandomSeed(0);
@@ -147,7 +159,7 @@ bool show_sort(Algorithm sort, size_t array_size, Algorithm shuffle)
         return false;
     strcpy_s(status_text, 255, "");
 
-    WaitTime(750.f);
+    pause_for(750.f);
     array_read_count = 0;
     array_write_count = 0;
     SetRandomSeed(0);
@@ -206,6 +218,7 @@ int main()
     SetTargetFPS(60);
 
     pthread_t sort_thread;
+    pause = clock();
     pthread_create(&sort_thread, NULL, sort_proc, NULL);
 
     while (!WindowShouldClose())
