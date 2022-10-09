@@ -155,8 +155,11 @@ bool show_sort(Algorithm sort, size_t array_size, Algorithm shuffle)
     array_write_count = 0;
     SetRandomSeed(0);
     strcpy_s(status_text, 255, TextFormat("Shuffling: %s", shuffle.name));
+    float old_d = array_access_delay;
+    array_access_delay = 500.f / 4 / array_size; // 4 array accesses required per element when shuffling
     if (!shuffle.fun(sort_array))
         return false;
+    array_access_delay = old_d;
     strcpy_s(status_text, 255, "");
 
     pause_for(750.f);
