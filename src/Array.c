@@ -53,19 +53,36 @@ typedef struct Array_Result_Bool
     bool value;
 } Array_Result_Bool;
 
+/**
+ * @brief Macro that propagates the error state of an `Array_Result` or `Array_Result_Bool`
+ * by returning `false` out of the current function if `maybe_err`'s `condition` property is `ARRAY_ERR`
+ */
 #define Array_propagate_err(maybe_err)    \
     if (maybe_err.condition == ARRAY_ERR) \
         return false;
 
+/**
+ * @brief Struct type representing a sorting algorithm.
+ * `fun` is a function pointer which takes an `Array` and sorts it in place,
+ * returning `false` if there were any abnormalities and `true` otherwise.
+ * `name` is a null-terminated `const char *` holding the name of the sorting algorithm.
+ */
 typedef const struct Algorithm
 {
     bool (*fun)(Array);
     const char *name;
 } Algorithm;
 
+/**
+ * @brief A type for an array access callback function pointer.
+ * It takes an `Array` (the array accessed) and a `size_t` (the index of the `Array` that was accessed).
+ */
 typedef void (*Array_CallbackType)(Array, size_t);
+/** @brief Internal value */
 static void _Array_default_callback(Array array, size_t index) {}
+/** @brief Internal value */
 static Array_CallbackType _Array_at_callback = _Array_default_callback;
+/** @brief Internal value */
 static Array_CallbackType _Array_set_callback = _Array_default_callback;
 
 /**

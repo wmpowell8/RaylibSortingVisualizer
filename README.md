@@ -33,6 +33,10 @@ Please **read the warnings** at the top. Thank you!
 - [X] Add a HUD using a non-obtrusive color ([commit ce77fdc](https://github.com/wmpowell8/RaylibSortingVisualizer/commit/ce77fdc2f51498ac3e74572db742909b3b439866))
 - [ ] Add more algorithms
 
+### Contributing new algorithms
+
+To contribute new algorithms, first read the documentation comments in [src/Array.c](src/Array.c) to get an idea of how this visualizer implements algorithms and dynamically-sized arrays. Then go into the [src/algorithms/sort](src/algorithms/sort) folder and create a new file. In this file you will define a new `Algorithm` which contains the data for the sorting algorithm you're implementing. Finally, go into [src/main.c](src/main.c), include the file you just created, and add a new call to `show_sort` under the long if-statement in the `sort_proc` function. For information on which arguments you should put into the `show_sort` call to make your new algorithm show properly, consult the documentation comments on `show_sort`.
+
 ## What do I think of this?
 
 I started this project in C, so I'm sticking with C, but man, do I wish I used [Rust](https://github.com/rust-lang/rust).
