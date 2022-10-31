@@ -145,7 +145,7 @@ bool show_sort(Algorithm sort, size_t array_size, Algorithm shuffle)
     pause_for(750.f);
     array_read_count = 0;
     array_write_count = 0;
-    strcpy_s(status_text, 255, "Initializing array");
+    strcpy_s(status_text, 255, TextFormat("Initializing %llu-element array", array_size));
     Array_free(sort_array);
     sort_array = Array_new_init(array_size);
     strcpy_s(status_text, 255, "");
@@ -154,7 +154,7 @@ bool show_sort(Algorithm sort, size_t array_size, Algorithm shuffle)
     array_read_count = 0;
     array_write_count = 0;
     SetRandomSeed(0);
-    strcpy_s(status_text, 255, TextFormat("Shuffling: %s", shuffle.name));
+    strcpy_s(status_text, 255, TextFormat("Shuffling: %s (%llu elements)", shuffle.name, array_size));
     float old_d = array_access_delay;
     array_access_delay = 500.f / 4 / array_size; // 4 array accesses required per element when shuffling
     if (!shuffle.fun(sort_array))
@@ -166,7 +166,7 @@ bool show_sort(Algorithm sort, size_t array_size, Algorithm shuffle)
     array_read_count = 0;
     array_write_count = 0;
     SetRandomSeed(0);
-    strcpy_s(status_text, 255, TextFormat("Sorting: %s", sort.name));
+    strcpy_s(status_text, 255, TextFormat("Sorting: %s (%llu elements)", sort.name, array_size));
     if (!sort.fun(sort_array))
         return false;
     strcpy_s(status_text, 255, "");
@@ -228,8 +228,17 @@ int main()
     {
         BeginDrawing();
         ClearBackground(BLACK);
+        size_t array_runs = 1;
+        for (size_t i = 1; i < sort_array->len; i++)
+            if (sort_array->_arr[i] < sort_array->_arr[i - 1])
+                array_runs++;
         draw_array(sort_array, GetScreenWidth() - 10, GetScreenHeight() - 10, 5, 5);
-        DrawText(TextFormat("%s\nArray Accesses: %llu\n\t(%llu reads, %llu writes)", status_text, array_read_count + array_write_count, array_read_count, array_write_count), 10, 10, 20, GREEN);
+        DrawText(TextFormat("%s\nArray Accesses: %llu\n\t(%llu reads, %llu writes)\n%llu elements in array (%llu run{s})",
+                            status_text,
+                            array_read_count + array_write_count,
+                            array_read_count, array_write_count,
+                            sort_array->len, array_runs),
+                 10, 10, 20, GREEN);
 
         EndDrawing();
     }
