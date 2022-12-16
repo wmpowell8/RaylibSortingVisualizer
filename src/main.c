@@ -135,10 +135,11 @@ void draw_array(Array array, int width, int height, int x, int y)
  *
  * @param sort The algorithm to demonstrate
  * @param array_size The size of the `Array` to demonstrate the algorithm on
+ * @param delay The delay between array accesses
  * @param shuffle The algorithm used to shuffle the `Array` before sorting
  * @return Whether the demonstration was successful
  */
-bool show_sort(Algorithm sort, size_t array_size, Algorithm shuffle)
+bool show_sort(Algorithm sort, size_t array_size, float delay, Algorithm shuffle)
 {
     status_text[255] = '\0';
 
@@ -167,8 +168,11 @@ bool show_sort(Algorithm sort, size_t array_size, Algorithm shuffle)
     array_write_count = 0;
     SetRandomSeed(0);
     strcpy_s(status_text, 255, TextFormat("Sorting: %s (%llu elements)", sort.name, array_size));
+    old_d = array_access_delay;
+    array_access_delay = delay;
     if (!sort.fun(sort_array))
         return false;
+    array_access_delay = old_d;
     strcpy_s(status_text, 255, "");
 
     return true;
@@ -181,18 +185,18 @@ bool show_sort(Algorithm sort, size_t array_size, Algorithm shuffle)
 void *sort_proc(void *args)
 {
     if (
-        !show_sort(InsertionSort, 64, StandardShuffle) ||
-        !show_sort(BubbleSort, 64, StandardShuffle) ||
-        !show_sort(CocktailShakerSort, 64, StandardShuffle) ||
-        !show_sort(SelectionSort, 96, StandardShuffle) ||
-        !show_sort(ICantBelieveItCanSort, 48, StandardShuffle) ||
-        !show_sort(OddEvenSort, 64, StandardShuffle) ||
-        !show_sort(MergeSort, 256, StandardShuffle) ||
-        !show_sort(QuickSort, 128, StandardShuffle) ||
-        !show_sort(RadixSortLSD, 512, StandardShuffle) ||
-        !show_sort(HeapSort, 128, StandardShuffle) ||
-        !show_sort(SlowSort, 24, StandardShuffle) ||
-        !show_sort(BogoSort, 5, StandardShuffle))
+        !show_sort(InsertionSort, 96, 1.447f, StandardShuffle) ||
+        !show_sort(BubbleSort, 64, 1.628f, StandardShuffle) ||
+        !show_sort(CocktailShakerSort, 64, 1.628f, StandardShuffle) ||
+        !show_sort(SelectionSort, 96, 2.003f, StandardShuffle) ||
+        !show_sort(ICantBelieveItCanSort, 48, 1.447f, StandardShuffle) ||
+        !show_sort(OddEvenSort, 48, 1.447f, StandardShuffle) ||
+        !show_sort(MergeSort, 256, 2.441f, StandardShuffle) ||
+        !show_sort(QuickSort, 192, 2.193f, StandardShuffle) ||
+        !show_sort(RadixSortLSD, 512, 1.953f, StandardShuffle) ||
+        !show_sort(HeapSort, 128, 1.6f, StandardShuffle) ||
+        !show_sort(SlowSort, 24, 2.4f, StandardShuffle) ||
+        !show_sort(BogoSort, 5, 4.486f, StandardShuffle))
     {
         TraceLog(LOG_ERROR, "Sorting Visualizer: algorithm returned false; stopped prematurely");
         return NULL;
@@ -233,11 +237,12 @@ int main()
             if (sort_array->_arr[i] < sort_array->_arr[i - 1])
                 array_runs++;
         draw_array(sort_array, GetScreenWidth() - 10, GetScreenHeight() - 10, 5, 5);
-        DrawText(TextFormat("%s\nArray Accesses: %llu\n\t(%llu reads, %llu writes)\n%llu elements in array (%llu run{s})",
+        DrawText(TextFormat("%s\nArray Accesses: %llu\n\t(%llu reads, %llu writes)\n%llu elements in array (%llu run{s})\nDelay: %.3fms",
                             status_text,
                             array_read_count + array_write_count,
                             array_read_count, array_write_count,
-                            sort_array->len, array_runs),
+                            sort_array->len, array_runs,
+                            array_access_delay),
                  10, 10, 20, GREEN);
 
         EndDrawing();
