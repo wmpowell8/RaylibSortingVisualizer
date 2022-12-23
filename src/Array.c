@@ -120,23 +120,6 @@ Array Array_new(size_t len)
 }
 
 /**
- * @brief Returns a copy of an `Array`
- * TODO: Replace memcpy_s call with calls to `Array_at` and `Array_set`
- *
- * @param array the `Array` to copy
- * @return `NULL` if the underlying call to `memcpy_s` is unsuccessful; the resulting `Array` otherwise
- */
-Array Array_copy(Array array)
-{
-    Array returned = Array_mem_alloc(sizeof(struct Array));
-    returned->len = array->len;
-    returned->_arr = Array_mem_alloc(returned->len * sizeof(unsigned int));
-    if (!memcpy_s(returned->_arr, returned->len * sizeof(unsigned int), array->_arr, array->len * sizeof(unsigned int)))
-        return NULL;
-    return returned;
-}
-
-/**
  * @brief Frees the memory allocated to the inputted `Array`
  *
  * @param array The `Array` whose memory is to be freed
@@ -292,6 +275,27 @@ Array_Result_Bool Array_reorder(Array array, size_t index1, size_t index2)
     if (Array_set(array, index2, v1v) == ARRAY_ERR)
         return (Array_Result_Bool){ARRAY_ERR};
     return (Array_Result_Bool){ARRAY_OK, true};
+}
+
+/**
+ * @brief Returns a copy of an `Array`
+ *
+ * @param array the `Array` to copy
+ * @return `NULL` if an underlying call to `Array_at` or `Array_set` is unsuccessful; the resulting `Array` otherwise
+ */
+Array Array_copy(Array array)
+{
+    Array returned = Array_new(array->len);
+    for (size_t i = 0; i < returned->len; i++)
+    {
+        Array_Result value = Array_at(array, i);
+        if (value.condition == ARRAY_ERR || Array_set(returned, i, value.value) == ARRAY_ERR)
+        {
+            Array_free(returned);
+            return NULL;
+        }
+    }
+    return returned;
 }
 
 /**
