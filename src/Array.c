@@ -128,6 +128,7 @@ Array Array_new(size_t len)
 void Array_free(Array array)
 {
     Array_mem_free(array->_arr);
+    Array_mem_free(array);
 }
 
 /**
