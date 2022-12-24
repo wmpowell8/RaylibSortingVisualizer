@@ -147,8 +147,11 @@ bool show_sort(Algorithm sort, size_t array_size, float delay, Algorithm shuffle
     array_read_count = 0;
     array_write_count = 0;
     strcpy_s(status_text, 255, TextFormat("Initializing %llu-element array", array_size));
+    float old_d = array_access_delay;
+    array_access_delay = 0.f; // for instant array initialization
     Array_free(sort_array);
     sort_array = Array_new_init(array_size);
+    array_access_delay = old_d;
     strcpy_s(status_text, 255, "");
 
     pause_for(750.f);
@@ -156,7 +159,7 @@ bool show_sort(Algorithm sort, size_t array_size, float delay, Algorithm shuffle
     array_write_count = 0;
     SetRandomSeed(0);
     strcpy_s(status_text, 255, TextFormat("Shuffling: %s (%llu elements)", shuffle.name, array_size));
-    float old_d = array_access_delay;
+    old_d = array_access_delay;
     array_access_delay = 500.f / 4 / array_size; // 4 array accesses required per element when shuffling
     if (!shuffle.fun(sort_array))
         return false;
