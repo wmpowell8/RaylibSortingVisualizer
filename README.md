@@ -6,6 +6,7 @@ A sorting algorithm visualizer created with [Raylib](https://github.com/raysan5/
 
 - `Array` struct pointer type for dealing with variable-length arrays (see [src/Array.c](src/Array.c) for documentation on how to use)
 - `Algorithm` struct type for dealing with algorithms (contains a `bool (*)(Array)` function pointer and `const char *`)
+- [Procedurally-generated audio](src/procedural_audio.c) for clean sounds
 
 ## How to compile
 
@@ -24,6 +25,16 @@ You can get GCC for Windows [here](https://www.mingw-w64.org/).
 ### Using my Makefile?
 
 Please **read the warnings** at the top. Thank you!
+
+## ⚠️ Warning 🚧
+
+Raylib Sorting Visualizer's [procedurally-generated audio](src/procedural_audio.c) (introduced in [commit a65fb36](https://github.com/wmpowell8/RaylibSortingVisualizer/commit/a65fb3606934e5fe04aa2691753df83079aefd3f)), when initializing, can sometimes cause the Windows Audio service to malfunction, preventing any audio from playing until it is restarted.
+
+To fix this issue, you can restart the Windows Audio service by doing the following:
+
+1. Simultaneously press the Windows key and R and type in "services.msc".
+2. Ensure "Services (Local)" is selected on the left and scroll down until you see "Windows Audio". Select it.
+3. Click on the "Restart Service" button at the top. It's the one with a rectangle and a triangle.
 
 ## To-do
 
