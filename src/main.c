@@ -202,6 +202,11 @@ void *sort_proc(void *args)
     return NULL;
 }
 
+/** The window width before enabling fullscreen */
+int previous_window_width = 640;
+/** The window height before enabling fullscreen */
+int previous_window_height = 480;
+
 int main()
 {
     SetTraceLogLevel(LOG_ALL);
@@ -227,6 +232,21 @@ int main()
 
     while (!WindowShouldClose())
     {
+        if (IsKeyPressed(KEY_F11)) {
+            if (IsWindowFullscreen())
+            {
+                ToggleFullscreen();
+                SetWindowSize(previous_window_width, previous_window_height);
+            }
+            else
+            {
+                previous_window_width = GetScreenWidth();
+                previous_window_height = GetScreenHeight();
+                int monitor = GetCurrentMonitor();
+                SetWindowSize(GetMonitorWidth(monitor), GetMonitorHeight(monitor));
+                ToggleFullscreen();
+            }
+        }
         BeginDrawing();
         ClearBackground(BLACK);
         size_t array_runs = 1;
