@@ -1,6 +1,7 @@
 #include "rlonce.h"
 #include <pthread.h>
 #include "Array.c"
+#include "procedural_audio.c"
 #include "algorithms/shuffle/StandardShuffle.c"
 #include "algorithms/sort/BubbleSort.c"
 #include "algorithms/sort/CocktailShakerSort.c"
@@ -20,6 +21,8 @@
  */
 float array_access_delay = 2.f;
 
+#define SOUND_SUSTAIN 0.05f
+
 /**
  * @brief Used in the pause_for macro, which waits until clock() exceeds this value
  */
@@ -37,29 +40,27 @@ float pause;
  */
 Array sort_array;
 
-pthread_t sort_array_read_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER;
+pthread_mutex_t sort_array_read_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER;
 size_t sort_array_read_len = 0;
 size_t *sort_array_read_indices;
 
-pthread_t sort_array_write_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER;
+pthread_mutex_t sort_array_write_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER;
 size_t sort_array_write_len = 0;
 size_t *sort_array_write_indices;
-
-Sound array_read_sound;
-Sound array_write_sound;
 
 char status_text[256] = "";
 
 size_t array_read_count = 0;
 size_t array_write_count = 0;
 
-#define push_array_access(mutex, index_stack, index_len)               \
+#define push_array_access(mutex, index_stack, index_len, waveform)     \
     pthread_mutex_lock(mutex);                                         \
     size_t old_len = index_len;                                        \
     index_len++;                                                       \
     index_stack = MemRealloc(index_stack, index_len * sizeof(size_t)); \
     index_stack[old_len] = index;                                      \
-    pthread_mutex_unlock(mutex);
+    pthread_mutex_unlock(mutex);                                       \
+    push_sound(waveform, array_access_delay / 500 / SOUND_SUSTAIN, (float)array->_arr[index] / array->len, SOUND_SUSTAIN);
 
 void my_array_read_callback(Array array, size_t index)
 {
@@ -67,7 +68,7 @@ void my_array_read_callback(Array array, size_t index)
 
     if (array == sort_array)
     {
-        push_array_access(&sort_array_read_lock, sort_array_read_indices, sort_array_read_len);
+        push_array_access(&sort_array_read_lock, sort_array_read_indices, sort_array_read_len, sine_wave);
         array_read_count++;
         pause_for(array_access_delay);
     }
@@ -79,7 +80,7 @@ void my_array_write_callback(Array array, size_t index)
 
     if (array == sort_array)
     {
-        push_array_access(&sort_array_write_lock, sort_array_write_indices, sort_array_write_len);
+        push_array_access(&sort_array_write_lock, sort_array_write_indices, sort_array_write_len, sawtooth_wave);
         array_write_count++;
         pause_for(array_access_delay);
     }
@@ -90,33 +91,27 @@ void my_array_write_callback(Array array, size_t index)
  */
 void draw_array(Array array, int width, int height, int x, int y)
 {
-    // TODO: replace system for coloring in rectangles because the current system only uses the bottom 2 bits of every byte it allocates
-
     const Color RECTANGLE_COLORS[4] = {WHITE, BLUE, RED, MAGENTA};
 
-#define compile_array_accesses(mutex, index_stack, index_len, bit, sound)      \
-    pthread_mutex_lock(mutex);                                                 \
-    for (size_t i = 0; i < index_len; i++)                                     \
-    {                                                                          \
-        size_t index = index_stack[i];                                         \
-        if (index < array->len)                                                \
-        {                                                                      \
-            sort_array_modifications[index >> 2] |= bit << ((index & 3) << 1); \
-            SetSoundPitch(sound, (float)array->_arr[index] / array->len);      \
-            PlaySound(sound);                                                  \
-        }                                                                      \
-    }                                                                          \
-    index_len = 0;                                                             \
-    index_stack = MemRealloc(index_stack, 0);                                  \
+#define compile_array_accesses(mutex, index_stack, index_len, bit)         \
+    pthread_mutex_lock(mutex);                                             \
+    for (size_t i = 0; i < index_len; i++)                                 \
+    {                                                                      \
+        size_t index = index_stack[i];                                     \
+        if (index >= array->len)                                           \
+            continue;                                                      \
+        sort_array_modifications[index >> 2] |= bit << ((index & 3) << 1); \
+    }                                                                      \
+    index_len = 0;                                                         \
+    index_stack = MemRealloc(index_stack, 0);                              \
     pthread_mutex_unlock(mutex);
 
     unsigned char *sort_array_modifications = NULL;
     if (array == sort_array)
     {
-        sort_array_modifications = MemAlloc((array->len + 3 >> 2) * sizeof(unsigned char));
-
-        compile_array_accesses(&sort_array_read_lock, sort_array_read_indices, sort_array_read_len, 1, array_read_sound);
-        compile_array_accesses(&sort_array_write_lock, sort_array_write_indices, sort_array_write_len, 2, array_write_sound);
+        sort_array_modifications = MemAlloc((array->len) * sizeof(unsigned char));
+        compile_array_accesses(&sort_array_read_lock, sort_array_read_indices, sort_array_read_len, 1);
+        compile_array_accesses(&sort_array_write_lock, sort_array_write_indices, sort_array_write_len, 2);
     }
 
     for (size_t i = 0; i < array->len; i++)
@@ -219,8 +214,7 @@ int main()
     sort_array = Array_new_init(256);
 
     InitAudioDevice();
-    array_read_sound = LoadSound("assets/array_read.wav");
-    array_write_sound = LoadSound("assets/array_write.wav");
+    initialize_procedural_audio();
 
     InitWindow(640, 480, "Sorting Visualizer");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
@@ -252,6 +246,9 @@ int main()
     }
 
     CloseWindow();
+
+    deinitialize_procedural_audio();
+    CloseAudioDevice();
 
     pthread_kill(sort_thread, SIGTERM);
     Array_free(sort_array);
