@@ -80,7 +80,7 @@ void my_array_write_callback(Array array, size_t index)
 
     if (array == sort_array)
     {
-        push_array_access(&sort_array_write_lock, sort_array_write_indices, sort_array_write_len, sawtooth_wave);
+        push_array_access(&sort_array_write_lock, sort_array_write_indices, sort_array_write_len, triangle_wave);
         array_write_count++;
         pause_for(array_access_delay);
     }

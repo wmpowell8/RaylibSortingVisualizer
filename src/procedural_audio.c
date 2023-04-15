@@ -23,8 +23,10 @@ float sine_wave(float x)
     return sinf(2 * PI * x);
 }
 
-float sawtooth_wave(float x) {
-    return fmod(2 * x + 1, 2.0f) - 1.0f;
+float triangle_wave(float x)
+{
+    float intermediate = fmod(x + .25f, 1.0f);
+    return intermediate < .5f ? 4 * intermediate - 1 : -4 * intermediate + 3;
 }
 
 /* // Unused wave functions
@@ -33,10 +35,8 @@ float square_wave(float x) {
     return fmod(x, 1.0f) < .5f ? 1.0f : -1.0f;
 }
 
-float triangle_wave(float x)
-{
-    float intermediate = fmod(x + .25f, 1.0f);
-    return intermediate < .5f ? 4 * intermediate - 1 : -4 * intermediate + 3;
+float sawtooth_wave(float x) {
+    return fmod(2 * x + 1, 2.0f) - 1.0f;
 }
 
 float no_wave(float x) {
