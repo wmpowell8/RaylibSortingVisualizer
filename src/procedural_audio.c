@@ -11,7 +11,7 @@ following:
     rectangle and a triangle.
 */
 
-#include "rlonce.h"
+#include "raylib.h"
 #include <string.h>
 #include <math.h>
 #include <pthread.h>
