@@ -16,12 +16,15 @@
 #include "algorithms/sort/SlowSort.c"
 #include "algorithms/sort/BogoSort.c"
 
+/** How long the sound lasts when an array access is made */
+#define SOUND_SUSTAIN 0.05f
+/** What portion of the original color will remain 1 second after an array access */
+#define COLOR_SUSTAIN 1e-20
+
 /**
  * @brief The delay to wait every time the sorting algorithm makes an array access (in milliseconds)
  */
 float array_access_delay = 2.f;
-
-#define SOUND_SUSTAIN 0.05f
 
 /**
  * @brief Used in the pause_for macro, which waits until clock() exceeds this value
@@ -42,24 +45,34 @@ Array sort_array;
 
 pthread_mutex_t sort_array_read_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER;
 size_t sort_array_read_len = 0;
-size_t *sort_array_read_indices;
+/** Keeps track of the array items that were recently read to for the purpose of generating the colors of the bars */
+float *sort_array_reads = NULL;
 
 pthread_mutex_t sort_array_write_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER;
 size_t sort_array_write_len = 0;
-size_t *sort_array_write_indices;
+/** Keeps track of the array items that were recently written to for the purpose of generating the colors of the bars */
+float *sort_array_writes = NULL;
 
 char status_text[256] = "";
 
 size_t array_read_count = 0;
 size_t array_write_count = 0;
 
-#define push_array_access(mutex, index_stack, index_len, waveform)     \
-    pthread_mutex_lock(mutex);                                         \
-    size_t old_len = index_len;                                        \
-    index_len++;                                                       \
-    index_stack = MemRealloc(index_stack, index_len * sizeof(size_t)); \
-    index_stack[old_len] = index;                                      \
-    pthread_mutex_unlock(mutex);                                       \
+/** @note It is assumed that corresponding mutices are locked when this macro is called */
+#define correct_array_length(accesses, access_len, target_len)       \
+    if (access_len != array->len)                                    \
+    {                                                                \
+        accesses = MemRealloc(accesses, target_len * sizeof(float)); \
+        for (size_t i = access_len; i < target_len; i++)             \
+            accesses[i] = 0.0f;                                      \
+        access_len = target_len;                                     \
+    }
+
+#define push_array_access(mutex, accesses, access_len, waveform) \
+    pthread_mutex_lock(mutex);                                   \
+    correct_array_length(accesses, access_len, array->len);      \
+    accesses[index] = (float)clock() / CLOCKS_PER_SEC;           \
+    pthread_mutex_unlock(mutex);                                 \
     push_sound(waveform, array_access_delay / 500 / SOUND_SUSTAIN, (float)array->_arr[index] / array->len, SOUND_SUSTAIN);
 
 void my_array_read_callback(Array array, size_t index)
@@ -68,7 +81,7 @@ void my_array_read_callback(Array array, size_t index)
 
     if (array == sort_array)
     {
-        push_array_access(&sort_array_read_lock, sort_array_read_indices, sort_array_read_len, sine_wave);
+        push_array_access(&sort_array_read_lock, sort_array_reads, sort_array_read_len, sine_wave);
         array_read_count++;
         pause_for(array_access_delay);
     }
@@ -80,10 +93,20 @@ void my_array_write_callback(Array array, size_t index)
 
     if (array == sort_array)
     {
-        push_array_access(&sort_array_write_lock, sort_array_write_indices, sort_array_write_len, triangle_wave);
+        push_array_access(&sort_array_write_lock, sort_array_writes, sort_array_write_len, triangle_wave);
         array_write_count++;
         pause_for(array_access_delay);
     }
+}
+
+/** Helper function to interpolate between colors with a gamma of 2 */
+Color interpolate_colors(Color from, Color to, float t)
+{
+    return (Color){
+        sqrtf((to.r * to.r - from.r * from.r) * t + from.r * from.r),
+        sqrtf((to.g * to.g - from.g * from.g) * t + from.g * from.g),
+        sqrtf((to.b * to.b - from.b * from.b) * t + from.b * from.b),
+        sqrtf((to.a * to.a - from.a * from.a) * t + from.a * from.a)};
 }
 
 /**
@@ -93,36 +116,42 @@ void draw_array(Array array, int width, int height, int x, int y)
 {
     const Color RECTANGLE_COLORS[4] = {WHITE, BLUE, RED, MAGENTA};
 
-#define compile_array_accesses(mutex, index_stack, index_len, bit)         \
-    pthread_mutex_lock(mutex);                                             \
-    for (size_t i = 0; i < index_len; i++)                                 \
-    {                                                                      \
-        size_t index = index_stack[i];                                     \
-        if (index >= array->len)                                           \
-            continue;                                                      \
-        sort_array_modifications[index >> 2] |= bit << ((index & 3) << 1); \
-    }                                                                      \
-    index_len = 0;                                                         \
-    index_stack = MemRealloc(index_stack, 0);                              \
-    pthread_mutex_unlock(mutex);
+    float *reads = NULL;
+    float *writes = NULL;
 
-    unsigned char *sort_array_modifications = NULL;
     if (array == sort_array)
     {
-        sort_array_modifications = MemAlloc((array->len) * sizeof(unsigned char));
-        compile_array_accesses(&sort_array_read_lock, sort_array_read_indices, sort_array_read_len, 1);
-        compile_array_accesses(&sort_array_write_lock, sort_array_write_indices, sort_array_write_len, 2);
+        pthread_mutex_lock(&sort_array_read_lock);
+        pthread_mutex_lock(&sort_array_write_lock);
+
+        correct_array_length(sort_array_reads, sort_array_read_len, array->len);
+        correct_array_length(sort_array_writes, sort_array_write_len, array->len);
+        float time = (float)clock() / CLOCKS_PER_SEC;
+        reads = MemAlloc(array->len * sizeof(float));
+        writes = MemAlloc(array->len * sizeof(float));
+        for (size_t i = 0; i < array->len; i++)
+        {
+            reads[i] = powf(COLOR_SUSTAIN, time - sort_array_reads[i]);
+            writes[i] = powf(COLOR_SUSTAIN, time - sort_array_writes[i]);
+        }
+
+        pthread_mutex_unlock(&sort_array_read_lock);
+        pthread_mutex_unlock(&sort_array_write_lock);
     }
 
     for (size_t i = 0; i < array->len; i++)
     {
         int rect_height = (array->_arr[i] + 1) * height / array->len;
-        Color rect_color = sort_array_modifications == NULL ? WHITE : RECTANGLE_COLORS[sort_array_modifications[i >> 2] >> ((i & 3) << 1) & 3];
+        Color rect_color = reads == NULL || writes == NULL || array != sort_array ? RECTANGLE_COLORS[0] : reads[i] > writes[i]
+            ? interpolate_colors(RECTANGLE_COLORS[0], interpolate_colors(RECTANGLE_COLORS[1], RECTANGLE_COLORS[3], writes[i] / reads[i]), reads[i])
+            : interpolate_colors(RECTANGLE_COLORS[0], interpolate_colors(RECTANGLE_COLORS[2], RECTANGLE_COLORS[3], reads[i] / writes[i]), writes[i]);
         DrawRectangle(x + i * width / array->len, y + height - rect_height, width / array->len, rect_height, rect_color);
     }
 
-    if (sort_array_modifications != NULL)
-        MemFree(sort_array_modifications);
+    if (reads != NULL)
+        MemFree(reads);
+    if (writes != NULL)
+        MemFree(writes);
 }
 
 /**
@@ -211,8 +240,8 @@ int main()
 {
     SetTraceLogLevel(LOG_ALL);
 
-    sort_array_read_indices = MemAlloc(0);
-    sort_array_write_indices = MemAlloc(0);
+    sort_array_reads = MemAlloc(0);
+    sort_array_writes = MemAlloc(0);
 
     Array_set_at_callback(my_array_read_callback);
     Array_set_set_callback(my_array_write_callback);
@@ -224,7 +253,7 @@ int main()
     InitWindow(640, 480, "Sorting Visualizer");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(10, 10);
-    SetTargetFPS(60);
+    SetWindowState(FLAG_VSYNC_HINT);
 
     pthread_t sort_thread;
     pause = clock();
@@ -273,8 +302,8 @@ int main()
     pthread_kill(sort_thread, SIGTERM);
     Array_free(sort_array);
 
-    MemFree(sort_array_read_indices);
-    MemFree(sort_array_write_indices);
+    MemFree(sort_array_reads);
+    MemFree(sort_array_writes);
 
     return 0;
 }
