@@ -142,10 +142,14 @@ void draw_array(Array array, int width, int height, int x, int y)
     for (size_t i = 0; i < array->len; i++)
     {
         int rect_height = (array->_arr[i] + 1) * height / array->len;
+        int rect_left = i * width / array->len;
+        int rect_right = (i + 1) * width / array->len - 1;
+        if (rect_right - rect_left < 1)
+            rect_right = rect_left + 1;
         Color rect_color = reads == NULL || writes == NULL || array != sort_array ? RECTANGLE_COLORS[0] : reads[i] > writes[i]
             ? interpolate_colors(RECTANGLE_COLORS[0], interpolate_colors(RECTANGLE_COLORS[1], RECTANGLE_COLORS[3], writes[i] / reads[i]), reads[i])
             : interpolate_colors(RECTANGLE_COLORS[0], interpolate_colors(RECTANGLE_COLORS[2], RECTANGLE_COLORS[3], reads[i] / writes[i]), writes[i]);
-        DrawRectangle(x + i * width / array->len, y + height - rect_height, width / array->len, rect_height, rect_color);
+        DrawRectangle(x + rect_left, y + height - rect_height, rect_right - rect_left, rect_height, rect_color);
     }
 
     if (reads != NULL)
