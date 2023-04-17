@@ -11,18 +11,22 @@ static bool _sift_down(Array array, size_t starting_idx, size_t heap_size)
         size_t child1idx = (parent_idx << 1) + 1;
         if (child1idx >= heap_size)
             break;
+        Array_Result parent_value = Array_at(array, parent_idx);
+        Array_propagate_err(parent_value);
+        Array_Result child1value = Array_at(array, child1idx);
+        Array_propagate_err(child1value);
         size_t child2idx = child1idx + 1;
         if (child2idx >= heap_size)
         {
-            Array_Result_Bool res = Array_reorder(array, parent_idx, child1idx);
-            Array_propagate_err(res);
-            if (!res.value)
-                break;
+            if (parent_value.value > child1value.value) break;
+
+            if (Array_set(array, parent_idx, child1value.value) == ARRAY_ERR)
+                return false;
+            if (Array_set(array, child1idx, parent_value.value) == ARRAY_ERR)
+                return false;
             parent_idx = child1idx;
             continue;
         }
-        Array_Result child1value = Array_at(array, child1idx);
-        Array_propagate_err(child1value);
         Array_Result child2value = Array_at(array, child2idx);
         Array_propagate_err(child2value);
         size_t bigger_idx;
@@ -37,8 +41,6 @@ static bool _sift_down(Array array, size_t starting_idx, size_t heap_size)
             bigger_idx = child2idx;
             bigger_value = child2value.value;
         }
-        Array_Result parent_value = Array_at(array, parent_idx);
-        Array_propagate_err(parent_value);
         if (parent_value.value > bigger_value)
             break;
         if (Array_set(array, parent_idx, bigger_value) == ARRAY_ERR)
