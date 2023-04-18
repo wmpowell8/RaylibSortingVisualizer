@@ -310,4 +310,5 @@ Array_ResultCondition Array_reverse(Array array)
     for (size_t i = 0; i < array->len >> 1; i++)
         if (Array_swap(array, i, array->len - 1 - i) == ARRAY_ERR)
             return ARRAY_ERR;
+    return ARRAY_OK;
 }
