@@ -4,6 +4,8 @@
 static bool _me03mnepsmneov(Array array)
 {
     Array copy = Array_copy(array);
+    if (copy == NULL)
+        return false;
 
     for (size_t i = 0; i < copy->len; i++)
     {
