@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "../../Array.c"
+#pragma once
 
 static bool _kjfeefnje(Array array)
 {
