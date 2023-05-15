@@ -30,6 +30,19 @@
  */
 float array_access_delay = 2.f;
 
+#ifndef strcpy_s
+    void strcpy_s(char *restrict dest, size_t destsz, const char *restrict src) {
+        while (true) {
+            *dest = *src;
+            if (*dest == '\0') return;
+            destsz--;
+            if (destsz == 0ULL) return;  
+            src++;
+            dest++;          
+        }
+    }
+#endif
+
 /**
  * @brief Used in the pause_for macro, which waits until clock() exceeds this value
  */
@@ -306,6 +319,10 @@ int main()
 
     deinitialize_procedural_audio();
     CloseAudioDevice();
+
+    #ifndef SIGTERM
+        #define SIGTERM 15
+    #endif
 
     pthread_kill(sort_thread, SIGTERM);
     Array_free(sort_array);

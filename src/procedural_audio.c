@@ -99,7 +99,7 @@ void push_sound(float (*waveform)(float), float volume, float value, float durat
     SoundList new_item = &((struct SoundList){waveform, volume, value, duration, 0.0f, 1.0f, sound_list});
     // new item data needs to be copied over to newly allocated memory because it will be overwritten next time this code is run, causing a circular reference
     sound_list = MemAlloc(sizeof(struct SoundList));
-    memmove_s(sound_list, sizeof(struct SoundList), new_item, sizeof(struct SoundList));
+    memmove(sound_list, new_item, sizeof(struct SoundList));
     pthread_mutex_unlock(&sound_list_mutex);
 }
 

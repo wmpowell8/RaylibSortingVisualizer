@@ -2,17 +2,23 @@
 # WARNING: DOES NOT WORK WHEN USING MINGW ON WINDOWS OR WHEN USING CLANG/TCC
 
 CC = gcc
-ifeq ($(findstring cmd.exe,$(SHELL)),cmd.exe)
+ifeq (${OS}, Windows_NT)
 	/ = \\#
 	RM = del
+	OS_ARGS = -lraylib-WINDOWS -lopengl32 -lgdi32 -lwinmm -pthread
+	OUTPUT = RaylibSortingVisualizer.exe
+	F =
+	DEBUG_DELETE =
 else
 	/ = /
 	RM = rm
+	OS_ARGS = -lraylib-MACOS -framework CoreVideo -framework IOKit -framework Cocoa -framework GLUT -framework OpenGL
+	OUTPUT = RaylibSortingVisualizer
+	F = -f
+	DEBUG_DELETE = rm -rf RaylibSortingVisualizer.dSYM
 endif
 SOURCE = src$/main.c
-OUTPUT = RaylibSortingVisualizer.exe
-GENERIC_COMMAND = ${CC} ${SOURCE} -o ${OUTPUT} -Iinclude -Llib -lraylib -lopengl32 -lgdi32 -lwinmm -pthread
-RM = del
+GENERIC_COMMAND = ${CC} ${SOURCE} -o ${OUTPUT} -Iinclude -Llib ${OS_ARGS}
 
 prod:
 	${GENERIC_COMMAND} -O2
@@ -21,6 +27,5 @@ all:
 debug:
 	${GENERIC_COMMAND} -g
 clean:
-	${RM} RaylibSortingVisualizer.exe
-	${RM} RaylibSortingVisualizer.ilk
-	${RM} RaylibSortingVisualizer.pdb
+	${RM} ${F} ${OUTPUT}
+	${DEBUG_DELETE}
