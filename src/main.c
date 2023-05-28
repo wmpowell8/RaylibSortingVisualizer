@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include "Array.c"
 #include "procedural_audio.c"
+#include "font_data.h"
 #include "algorithms/shuffle/StandardShuffle.c"
 // #include "algorithms/shuffle/CubicShuffle.c"
 // #include "algorithms/shuffle/QuinticShuffle.c"
@@ -252,6 +253,13 @@ void *sort_proc(void *args)
     return NULL;
 }
 
+void draw_text_with_line_spacing(Font font, const char *text, Vector2 position, float font_size, float char_spacing, float line_spacing, Color tint) {
+    int line_count;
+    const char **lines = TextSplit(text, '\n', &line_count);
+    for (int i = 0; i < line_count; i++)
+        DrawTextEx(font, lines[i], (Vector2){position.x, position.y + i * line_spacing}, font_size, char_spacing, tint);
+}
+
 /** The window width before enabling fullscreen */
 int previous_window_width = 640;
 /** The window height before enabling fullscreen */
@@ -275,6 +283,11 @@ int main()
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(10, 10);
     SetWindowState(FLAG_VSYNC_HINT);
+
+    int font_data_size;
+    const unsigned char *font_data = DecompressData(COMPRESSED_FONT_DATA, sizeof(COMPRESSED_FONT_DATA), &font_data_size);
+    Font font = LoadFontFromMemory(".ttf", font_data, font_data_size, 30, NULL, 0);
+    MemFree((void *)font_data);
 
     pthread_t sort_thread;
     pause = clock();
@@ -304,13 +317,15 @@ int main()
             if (sort_array->_arr[i] < sort_array->_arr[i - 1])
                 array_runs++;
         draw_array(sort_array, GetScreenWidth() - 10, GetScreenHeight() - 10, 5, 5);
-        DrawText(TextFormat("%s\nArray Accesses: %llu\n\t(%llu reads, %llu writes)\n%llu elements in array (%llu run{s})\nDelay: %.3fms",
-                            status_text,
-                            array_read_count + array_write_count,
-                            array_read_count, array_write_count,
-                            sort_array->len, array_runs,
-                            array_access_delay),
-                 10, 10, 20, GREEN);
+        draw_text_with_line_spacing(
+            font,
+            TextFormat("%s\nArray Accesses: %llu\n\t(%llu reads, %llu writes)\n%llu elements in array (%llu run%s)\nDelay: %.3fms",
+                       status_text,
+                       array_read_count + array_write_count,
+                       array_read_count, array_write_count,
+                       sort_array->len, array_runs, array_runs == 1 ? "" : "s",
+                       array_access_delay),
+            (Vector2){10, 10}, font.baseSize, 0, font.baseSize, GREEN);
 
         EndDrawing();
     }
