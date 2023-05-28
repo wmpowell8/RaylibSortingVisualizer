@@ -51,6 +51,7 @@ static bool _ms(Array array, size_t start, size_t end)
         if (Array_set(array, start + i, value.value) == ARRAY_ERR)
             return false;
     }
+    Array_free(full);
 
     return true;
 }
