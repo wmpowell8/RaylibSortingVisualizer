@@ -1,16 +1,3 @@
-/*                       -----===== WARNING! =====-----
-Raylib Sorting Visualizer's procedural audio, when initializing, can sometimes
-cause the Windows Audio service to malfunction, preventing any audio from
-playing until it is restarted!
-To fix this issue, you can restart the Windows Audio service by doing the
-following:
-1.  Simultaneously press the Windows key and R and type in "services.msc".
-2.  Ensure "Services (Local)" is selected on the left and scroll down until you
-    see "Windows Audio". Select it.
-3.  Click on the "Restart Service" button at the top. It's the one with a
-    rectangle and a triangle.
-*/
-
 #include "raylib.h"
 #include <string.h>
 #include <math.h>
@@ -158,5 +145,6 @@ void initialize_procedural_audio()
 /** Deinitializes Raylib Sorting Visualizer's procedural audio (it is expected that CloseAudioDevice is called after) */
 void deinitialize_procedural_audio()
 {
+    StopAudioStream(audio_stream);
     UnloadAudioStream(audio_stream);
 }

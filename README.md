@@ -26,16 +26,6 @@ You can get GCC for Windows [here](https://www.mingw-w64.org/).
 
 Please **read the warnings** at the top. Thank you!
 
-## ⚠️ Warning 🚧
-
-Raylib Sorting Visualizer's [procedurally-generated audio](src/procedural_audio.c) (introduced in [commit a65fb36](https://github.com/wmpowell8/RaylibSortingVisualizer/commit/a65fb3606934e5fe04aa2691753df83079aefd3f)), when initializing, can sometimes cause the Windows Audio service to malfunction, preventing any audio from playing until it is restarted.
-
-To fix this issue, you can restart the Windows Audio service by doing the following:
-
-1. Simultaneously press the Windows key and R and type in "services.msc".
-2. Ensure "Services (Local)" is selected on the left and scroll down until you see "Windows Audio". Select it.
-3. Click on the "Restart Service" button at the top. It's the one with a rectangle and a triangle.
-
 ## To-do
 
 - [X] Add indicator for where array accesses are, with different colors for reads, writes, and both ([commit bc540cc](https://github.com/wmpowell8/RaylibSortingVisualizer/commit/bc540cc1ceae5de769dd40eda9566bbea58ca124))
