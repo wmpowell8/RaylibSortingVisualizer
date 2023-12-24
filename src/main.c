@@ -31,18 +31,22 @@
  */
 float array_access_delay = 2.f;
 
-/* // Uncomment this if you're on MacOS. (Temporary Solution)
-void strcpy_s(char *restrict dest, size_t destsz, const char *restrict src) {
-    while (true) {
+#ifndef _WIN32
+void strcpy_s(char *restrict dest, size_t destsz, const char *restrict src)
+{
+    while (true)
+    {
         *dest = *src;
-        if (*dest == '\0') return;
+        if (*dest == '\0')
+            return;
         destsz--;
-        if (destsz == 0ULL) return;  
+        if (destsz == 0ULL)
+            return;
         src++;
-        dest++;          
+        dest++;
     }
 }
-/*
+#endif
 
 /**
  * @brief Used in the pause_for macro, which waits until clock() exceeds this value
