@@ -1,3 +1,6 @@
+# Windows
 RaylibSortingVisualizer.exe
-RaylibSortingVisualizer.ilk
-RaylibSortingVisualizer.pdb
+
+# MacOS
+RaylibSortingVisualizer
+RaylibSortingVisualizer.dSYM/*
